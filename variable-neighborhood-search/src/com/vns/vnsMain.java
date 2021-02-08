@@ -9,9 +9,12 @@ import java.util.Scanner;
 public class vnsMain {
     public static int numOfMachines, numOfParts;
     public static ArrayList<Machine> machines;
+    public static int[][] table;
 
     public static void main(String[] args) {
         importFromFile();
+        createInitial();
+        //System.out.println("d");
     }
 
     private static void importFromFile() {
@@ -32,6 +35,19 @@ public class vnsMain {
             line.close();
         } catch (FileNotFoundException e) {
             System.err.println("FileNotFoundException: " + e.getMessage());
+        }
+    }
+
+    static void createInitial() {
+        table = new int[numOfMachines][numOfParts];
+        for (int i = 0; i < numOfMachines; i++) {
+            for (int j = 1; j <= numOfParts; j++) {
+                if (machines.get(i).getDetails().contains(j)) {
+                    table[i][j - 1] = 1;
+                } else {
+                    table[i][j - 1] = 0;
+                }
+            }
         }
     }
 }
