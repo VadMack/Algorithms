@@ -3,7 +3,9 @@ package com.vns;
 import java.util.ArrayList;
 
 public class Machine {
-    int id;
+    private int id;
+    private int strNum;
+    private int value;
     ArrayList<Integer> details = new ArrayList<>();
 
     public Machine(int id) {
@@ -14,8 +16,24 @@ public class Machine {
         return id;
     }
 
+    public int getValue() {
+        return value;
+    }
+
+    public int getStrNum() {
+        return strNum;
+    }
+
     public void setId(int id) {
         this.id = id;
+    }
+
+    public void setStrNum(int num) {
+        this.strNum = num;
+    }
+
+    public void setValue(int value) {
+        this.value = value;
     }
 
     public ArrayList<Integer> getDetails() {
