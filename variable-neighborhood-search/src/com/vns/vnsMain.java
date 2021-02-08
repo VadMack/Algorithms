@@ -8,14 +8,18 @@ import java.util.Scanner;
 
 
 public class vnsMain {
-    public static int numOfMachines, numOfParts;
+    public static int numOfMachines, numOfDetails;
     public static ArrayList<Machine> machines;
     public static int[][] table;
+    public static int[] detailsPositions;
+    public static int[] detailsValues;
+
 
     public static void main(String[] args) {
         importFromFile();
         createInitial();
-        sortByDecimal();
+        sortMachines();
+        sortDetails();
         System.out.println("d");
 
     }
@@ -25,7 +29,7 @@ public class vnsMain {
         try {
             Scanner file = new Scanner(new File("Input.txt"));
             numOfMachines = file.nextInt();
-            numOfParts = file.nextInt();
+            numOfDetails = file.nextInt();
             Scanner line = new Scanner(file.nextLine());
             for (int i = 0; i < numOfMachines; ++i) {
                 line = new Scanner(file.nextLine());
@@ -42,10 +46,12 @@ public class vnsMain {
     }
 
     static void createInitial() {
-        table = new int[numOfMachines][numOfParts];
+        table = new int[numOfMachines][numOfDetails];
+        detailsPositions = new int[numOfDetails];
+        detailsValues = new int[numOfDetails];
+
         for (int i = 0; i < numOfMachines; i++) {
-            machines.get(i).setStrNum(i);
-            for (int j = 1; j <= numOfParts; j++) {
+            for (int j = 1; j <= numOfDetails; j++) {
                 if (machines.get(i).getDetails().contains(j)) {
                     table[i][j - 1] = 1;
                 } else {
@@ -53,9 +59,13 @@ public class vnsMain {
                 }
             }
         }
+
+        for (int i = 0; i < numOfDetails; i++) {
+            detailsPositions[i] = i + 1;
+        }
     }
 
-    static void sortByDecimal() {
+    static void sortMachines() {
         for (int i = 0; i < table.length; i++) {
             int value = 0;
             int index = 0;
@@ -66,19 +76,11 @@ public class vnsMain {
         }
         for (int i = 0; i < table.length - 1; i++) {
             for (int j = 0; j < table.length - i - 1; j++) {
-                if(j == 4){
-                    System.out.println();
-                }
                 if (machines.get(j).getValue() < machines.get(j + 1).getValue()) {
                     int[] temp;
-                    int bufNum;
                     temp = Arrays.copyOf(table[j], table[j].length);
                     table[j] = Arrays.copyOf(table[j + 1], table[j + 1].length);
                     table[j + 1] = Arrays.copyOf(temp, temp.length);
-
-                    bufNum = machines.get(j).getStrNum();
-                    machines.get(j).setStrNum(machines.get(j + 1).getStrNum());
-                    machines.get(j + 1).setStrNum(bufNum);
 
                     Machine bufMachine = machines.get(j);
                     machines.set(j, machines.get(j + 1));
@@ -86,5 +88,46 @@ public class vnsMain {
                 }
             }
         }
+    }
+
+    static void sortDetails(){
+        for (int i = 0; i < numOfDetails; i++) {
+            int value = 0;
+            int index = 0;
+            for (int j = numOfMachines - 1; j >= 0; j--) {
+                value += table[j][i] * Math.pow(2, index++);
+            }
+            detailsValues[i] = value;
+        }
+
+        for (int i = 0; i < numOfDetails - 1; i++) {
+            for (int j = 0; j < numOfDetails - i - 1; j++) {
+                if (detailsValues[j] < detailsValues[j + 1]) {
+                    int[] temp = new int[numOfMachines];
+
+                    // swap of columns
+                    for (int k = 0; k < numOfMachines; k++) {
+                        temp[k] = table[k][j];
+                    }
+                    for (int k = 0; k < numOfMachines; k++) {
+                        table[k][j] = table[k][j + 1];
+                    }
+                    for (int k = 0; k < numOfMachines; k++) {
+                        table[k][j + 1] = temp[k];
+                    }
+
+                    // swap of values
+                    int tempValue = detailsValues[j];
+                    detailsValues[j] = detailsValues[j + 1];
+                    detailsValues[j + 1] = tempValue;
+
+                    // swap of positions
+                    int tempPosition = detailsPositions[j];
+                    detailsPositions[j] = detailsPositions[j + 1];
+                    detailsPositions[j + 1] = tempPosition;
+                }
+            }
+        }
+
     }
 }

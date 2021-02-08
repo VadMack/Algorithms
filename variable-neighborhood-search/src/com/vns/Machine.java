@@ -4,7 +4,6 @@ import java.util.ArrayList;
 
 public class Machine {
     private int id;
-    private int strNum;
     private int value;
     ArrayList<Integer> details = new ArrayList<>();
 
@@ -16,20 +15,12 @@ public class Machine {
         return id;
     }
 
-    public int getValue() {
-        return value;
-    }
-
-    public int getStrNum() {
-        return strNum;
-    }
-
     public void setId(int id) {
         this.id = id;
     }
 
-    public void setStrNum(int num) {
-        this.strNum = num;
+    public int getValue() {
+        return value;
     }
 
     public void setValue(int value) {
