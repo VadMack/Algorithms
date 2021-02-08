@@ -10,6 +10,7 @@ import java.util.Scanner;
 public class vnsMain {
     public static int numOfMachines, numOfDetails;
     public static ArrayList<Machine> machines;
+    public static ArrayList<Cluster> clusters = new ArrayList<>();
     public static int[][] table;
     public static int[] detailsPositions;
     public static int[] detailsValues;
@@ -20,6 +21,7 @@ public class vnsMain {
         createInitial();
         sortMachines();
         sortDetails();
+        generateCluster();
         System.out.println("d");
 
     }
@@ -128,6 +130,17 @@ public class vnsMain {
                 }
             }
         }
+    }
 
+    static void generateCluster() {
+        int x = 0;
+        int y = 0;
+        while (x < numOfDetails && y < numOfMachines){
+            int newX = x + (int)(Math.random() * (numOfDetails - x));
+            int newY = y + (int)(Math.random() * (numOfMachines - y));
+            clusters.add(new Cluster(x, y, newX, newY));
+            x = newX + 1;
+            y = newY + 1;
+        }
     }
 }
