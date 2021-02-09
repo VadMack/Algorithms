@@ -14,15 +14,20 @@ public class vnsMain {
     public static int[][] table;
     public static int[] detailsPositions;
     public static int[] detailsValues;
-
+    public static String output;
+    public static double bestEfficiency = 0;
 
     public static void main(String[] args) {
         importFromFile();
         createInitial();
         sortMachines();
         sortDetails();
-        generateCluster();
-        System.out.println("d");
+        for (int i = 0; i < 999; i++) {
+            generateCluster();
+            calculateEfficiency();
+        }
+        System.out.println(output);
+        System.out.println(bestEfficiency);
 
     }
 
@@ -86,13 +91,13 @@ public class vnsMain {
 
                     Machine bufMachine = machines.get(j);
                     machines.set(j, machines.get(j + 1));
-                    machines.set(j+1, bufMachine);
+                    machines.set(j + 1, bufMachine);
                 }
             }
         }
     }
 
-    static void sortDetails(){
+    static void sortDetails() {
         for (int i = 0; i < numOfDetails; i++) {
             int value = 0;
             int index = 0;
@@ -135,12 +140,76 @@ public class vnsMain {
     static void generateCluster() {
         int x = 0;
         int y = 0;
-        while (x < numOfDetails && y < numOfMachines){
-            int newX = x + (int)(Math.random() * (numOfDetails - x));
-            int newY = y + (int)(Math.random() * (numOfMachines - y));
+        while (x < numOfDetails && y < numOfMachines) {
+            int newX = x + (int) (Math.random() * (numOfDetails - x));
+            int newY = y + (int) (Math.random() * (numOfMachines - y));
             clusters.add(new Cluster(x, y, newX, newY));
             x = newX + 1;
             y = newY + 1;
+        }
+    }
+
+    static void calculateEfficiency() {
+        double numOfOnes = 0;
+        double numOfOnesInClusters = 0;
+        double numOfZerosInClusters = 0;
+        for (int i = 0; i < numOfMachines; i++) {
+            for (int j = 0; j < numOfDetails; j++) {
+                if (table[i][j] == 1) {
+                    numOfOnes++;
+                }
+            }
+        }
+        for (int i = 0; i < clusters.size(); i++) {
+            for (int j = clusters.get(i).getUx(); j <= clusters.get(i).getDx(); j++) {
+                for (int k = clusters.get(i).getUy(); k <= clusters.get(i).getDy(); k++) {
+                    if (table[k][j] == 1) {
+                        numOfOnesInClusters++;
+                    } else {
+                        numOfZerosInClusters++;
+                    }
+                }
+            }
+
+        }
+        double efficiency = numOfOnesInClusters / (numOfOnes + numOfZerosInClusters);
+        if (efficiency > bestEfficiency) {
+            bestEfficiency = efficiency;
+            generateOutput();
+        }
+        clusters.clear();
+    }
+
+    static void generateOutput() {
+        output = "";
+
+        // generate string of output for machines
+        int[] clustersToMachines = new int[numOfMachines + 1];
+        for (int i = 0; i < numOfMachines; i++) {
+            for (int j = 0; j < clusters.size(); j++) {
+                if (clusters.get(j).getUy() <= i && clusters.get(j).getDy() >= i) {
+                    clustersToMachines[machines.get(i).getId()] = j + 1;
+                    break;
+                }
+            }
+        }
+        for (int i = 1; i < numOfMachines + 1; i++) {
+            output += clustersToMachines[i] + " ";
+        }
+        output += "\n";
+
+        // generate string of output for details
+
+        int[] clustersToDetails = new int[numOfDetails + 1];
+        for (int i = 0; i < numOfDetails; i++) {
+            for (int j = 0; j < clusters.size(); j++) {
+                if (clusters.get(j).getUx() <= i && clusters.get(j).getDx() >= i){
+                    clustersToDetails[detailsPositions[i]] = j + 1;
+                }
+            }
+        }
+        for (int i = 1; i < numOfDetails + 1; i++) {
+            output += clustersToDetails[i] + " ";
         }
     }
 }
