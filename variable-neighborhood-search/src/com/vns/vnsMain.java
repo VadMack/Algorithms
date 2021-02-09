@@ -22,7 +22,7 @@ public class vnsMain {
         createInitial();
         sortMachines();
         sortDetails();
-        for (int i = 0; i < 999; i++) {
+        for (int i = 0; i < 100000000; i++) {
             generateCluster();
             calculateEfficiency();
         }
@@ -143,9 +143,11 @@ public class vnsMain {
         while (x < numOfDetails && y < numOfMachines) {
             int newX = x + (int) (Math.random() * (numOfDetails - x));
             int newY = y + (int) (Math.random() * (numOfMachines - y));
-            clusters.add(new Cluster(x, y, newX, newY));
-            x = newX + 1;
-            y = newY + 1;
+            if ((newX == numOfDetails) == (newY == numOfMachines)) {
+                clusters.add(new Cluster(x, y, newX, newY));
+                x = newX + 1;
+                y = newY + 1;
+            }
         }
     }
 
