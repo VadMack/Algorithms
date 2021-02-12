@@ -22,10 +22,10 @@ public class vnsMain {
         createInitial();
         sortMachines();
         sortDetails();
-        for (int i = 0; i < 999; i++) {
-            generateCluster();
-            calculateEfficiency();
-        }
+        generateCluster();
+        calculateEfficiency();
+        System.out.println("A");
+        shaking();
         System.out.println(output);
         System.out.println(bestEfficiency);
 
@@ -149,7 +149,7 @@ public class vnsMain {
         }
     }
 
-    static void calculateEfficiency() {
+    static boolean calculateEfficiency() {
         double numOfOnes = 0;
         double numOfOnesInClusters = 0;
         double numOfZerosInClusters = 0;
@@ -176,8 +176,10 @@ public class vnsMain {
         if (efficiency > bestEfficiency) {
             bestEfficiency = efficiency;
             generateOutput();
+            return true;
         }
-        clusters.clear();
+        return false;
+
     }
 
     static void generateOutput() {
@@ -203,13 +205,36 @@ public class vnsMain {
         int[] clustersToDetails = new int[numOfDetails + 1];
         for (int i = 0; i < numOfDetails; i++) {
             for (int j = 0; j < clusters.size(); j++) {
-                if (clusters.get(j).getUx() <= i && clusters.get(j).getDx() >= i){
+                if (clusters.get(j).getUx() <= i && clusters.get(j).getDx() >= i) {
                     clustersToDetails[detailsPositions[i]] = j + 1;
                 }
             }
         }
         for (int i = 1; i < numOfDetails + 1; i++) {
             output += clustersToDetails[i] + " ";
+        }
+    }
+
+    static void shaking(){
+        ArrayList<Cluster> bufList = new ArrayList<>(clusters);
+
+        for (int i = 0; i < clusters.size() - 1; i++) {
+            bufList.get(i).setDx(clusters.get(i+1).getDx());
+            bufList.get(i).setUx(clusters.get(i+1).getUx());
+            bufList.remove(i+1);
+
+            ArrayList<Cluster> bufbuf = new ArrayList<>(clusters);
+            clusters.clear();
+            clusters.addAll(bufList);
+            bufList.clear();
+            bufList.addAll(bufbuf);
+
+            if(!calculateEfficiency()){
+                bufList.clear();
+                bufList.addAll(clusters);
+                clusters.clear();
+                clusters.addAll(bufbuf);
+            }
         }
     }
 }
