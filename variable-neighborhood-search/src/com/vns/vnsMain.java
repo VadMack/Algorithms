@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.Scanner;
 
 
+
 public class vnsMain {
     public static int numOfMachines, numOfDetails;
     public static ArrayList<Machine> machines;
@@ -17,15 +18,21 @@ public class vnsMain {
     public static String output;
     public static double bestEfficiency = 0;
 
+    public static ArrayList<Cluster> otladka = new ArrayList<>();
+
     public static void main(String[] args) {
         importFromFile();
         createInitial();
         sortMachines();
         sortDetails();
-        for (int i = 0; i < 100000000; i++) {
+        System.out.println();
+        for (int i = 0; i < 10000; i++) {
             generateCluster();
-            calculateEfficiency();
+            calculateEfficiency(clusters);
+            shaking();
         }
+
+
         System.out.println(output);
         System.out.println(bestEfficiency);
 
@@ -138,6 +145,7 @@ public class vnsMain {
     }
 
     static void generateCluster() {
+        clusters.clear();
         int x = 0;
         int y = 0;
         while (x < numOfDetails && y < numOfMachines) {
@@ -149,9 +157,33 @@ public class vnsMain {
                 y = newY + 1;
             }
         }
+        clusters.get(clusters.size()-1).setDx(numOfDetails-1);
+        clusters.get(clusters.size()-1).setDy(numOfMachines-1);
     }
 
-    static void calculateEfficiency() {
+    static void shaking() {
+        ArrayList<Cluster> buf = new ArrayList<>();
+        for (int i = 0; i < clusters.size(); i++){
+            buf.add(new Cluster(clusters.get(i).getUx(), clusters.get(i).getUy(),
+                    clusters.get(i).getDx(), clusters.get(i).getDy()));
+        }
+
+        for (int i = 0; i < buf.size() - 1; i++) {
+            buf.get(i).setDx(clusters.get(i+1).getDx());
+            buf.get(i).setDy(clusters.get(i+1).getDy());
+            buf.remove(i+1);
+
+            if (!calculateEfficiency(buf)){
+                buf.remove(i);
+                buf.add(new Cluster(clusters.get(i).getUx(), clusters.get(i).getUy(),
+                        clusters.get(i).getDx(), clusters.get(i).getDy()));
+                buf.add(new Cluster(clusters.get(i+1).getUx(), clusters.get(i+1).getUy(),
+                        clusters.get(i+1).getDx(), clusters.get(i+1).getDy()));
+            }
+        }
+    }
+
+    static boolean calculateEfficiency(ArrayList<Cluster> clusters) {
         double numOfOnes = 0;
         double numOfOnesInClusters = 0;
         double numOfZerosInClusters = 0;
@@ -176,13 +208,16 @@ public class vnsMain {
         }
         double efficiency = numOfOnesInClusters / (numOfOnes + numOfZerosInClusters);
         if (efficiency > bestEfficiency) {
+            System.out.println("Better");
             bestEfficiency = efficiency;
-            generateOutput();
+            generateOutput(clusters);
+            return true;
         }
-        clusters.clear();
+        //clusters.clear();
+        return false;
     }
 
-    static void generateOutput() {
+    static void generateOutput(ArrayList<Cluster> clusters) {
         output = "";
 
         // generate string of output for machines
@@ -205,7 +240,7 @@ public class vnsMain {
         int[] clustersToDetails = new int[numOfDetails + 1];
         for (int i = 0; i < numOfDetails; i++) {
             for (int j = 0; j < clusters.size(); j++) {
-                if (clusters.get(j).getUx() <= i && clusters.get(j).getDx() >= i){
+                if (clusters.get(j).getUx() <= i && clusters.get(j).getDx() >= i) {
                     clustersToDetails[detailsPositions[i]] = j + 1;
                 }
             }
@@ -213,5 +248,6 @@ public class vnsMain {
         for (int i = 1; i < numOfDetails + 1; i++) {
             output += clustersToDetails[i] + " ";
         }
+        otladka = new ArrayList<>(clusters);
     }
 }
