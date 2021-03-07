@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
+
 public class FileHandler {
 
   public static List<City> importFromFile(String path) {
