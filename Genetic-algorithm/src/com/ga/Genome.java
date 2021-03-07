@@ -2,6 +2,7 @@ package com.ga;
 
 import static com.ga.SupportClass.isPrime;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -16,6 +17,13 @@ public class Genome {
     this.cities = cities;
     sequence = cities.stream().map(City::getId).collect(Collectors.toList());
     fitness = calculateFitness();
+  }
+
+  public Genome(Genome genome){
+    this.length = genome.getLength();
+    this.fitness = genome.getFitness();
+    this.cities = new ArrayList<>(genome.getCities());
+    this.sequence = new ArrayList<>(genome.getSequence());
   }
 
   // TODO
@@ -41,7 +49,37 @@ public class Genome {
     return null;
   }
 
+  public int getLength() {
+    return length;
+  }
+
+  public void setLength(int length) {
+    this.length = length;
+  }
+
+  public void setFitness(double fitness) {
+    this.fitness = fitness;
+  }
+
+  public List<City> getCities() {
+    return cities;
+  }
+
+  public void setCities(List<City> cities) {
+    this.cities = cities;
+  }
+
+  public List<Integer> getSequence() {
+    return sequence;
+  }
+
+  public void setSequence(List<Integer> sequence) {
+    this.sequence = sequence;
+  }
+
   public double getFitness() {
     return fitness;
   }
 }
+
+
