@@ -50,5 +50,7 @@ public class Main {
         System.out.println(genome2.getSequence());
         System.out.println(genome3.getSequence());
         System.out.println(child.getSequence());
+        child = ga.mutation(child);
+        System.out.println(child.getSequence());
     }
 }

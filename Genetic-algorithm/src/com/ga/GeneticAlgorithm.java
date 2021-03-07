@@ -32,7 +32,7 @@ public class GeneticAlgorithm {
         return null;
     }
 
-    public Genome crossover(Genome parent1, Genome parent2, Genome parent3){
+    public Genome crossover(Genome parent1, Genome parent2, Genome parent3) {
         Genome child = new Genome(parent1);
         List<Integer> sequence = new ArrayList<>(child.getSequence());
         Random random = new Random();
@@ -45,9 +45,28 @@ public class GeneticAlgorithm {
         for (int i = crossoverPoint1; i < crossoverPoint2; i++) {
             Collections.swap(sequence, sequence.indexOf(parent3.getSequence().get(i)), i);
         }
-        sequence.set(sequence.size()-1, sequence.get(0));
+        sequence.set(sequence.size() - 1, sequence.get(0));
         child.setSequence(sequence);
+        child.setFitness(child.calculateFitness());
         return child;
+    }
+
+    public Genome mutation(Genome genome) {
+        Random random = new Random();
+        List<Integer> sequence = new ArrayList<>(genome.getSequence());
+        int first, last;
+        first = sequence.get(0);
+        last = sequence.get(sequence.size() - 1);
+        Collections.swap(sequence, random.nextInt(sequence.size()),
+                random.nextInt(sequence.size()));
+        if (!sequence.get(0).equals(first)) {
+            sequence.set(sequence.size() - 1, sequence.get(0));
+        } else if (!sequence.get(sequence.size() - 1).equals(last)) {
+            sequence.set(0, sequence.get(sequence.size() - 1));
+        }
+        genome.setSequence(sequence);
+        genome.setFitness(genome.calculateFitness());
+        return genome;
     }
 
 }
