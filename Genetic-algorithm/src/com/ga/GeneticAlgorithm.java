@@ -22,6 +22,7 @@ public class GeneticAlgorithm {
         int populationSize = population.size();
         Genome bestGenome = population.get(0);
         for (int i = 0; i < numOfCycles; i++) {
+            System.out.println("Population " + i);
             List<Genome> bufPopulation = new ArrayList<>();
             for (int j = 0; j < numOfSurvivors; j++) {
                 bufPopulation.add(roulette(population));
