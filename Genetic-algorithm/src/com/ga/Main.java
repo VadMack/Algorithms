@@ -8,10 +8,14 @@ import java.util.List;
 public class Main {
 
     public static void main(String[] args) {
-        /*List<City> cities = importFromFile("cities.csv");
-        System.out.println(cities);*/
-
-        List<City> cities = new ArrayList<>();
+        List<City> cities = importFromFile("cities.csv");
+        Genome initialGenome = new Genome(cities);
+        GeneticAlgorithm ga = new GeneticAlgorithm(5, 50, 1);
+        List<Genome> population = ga.generatePopulation(initialGenome, 10);
+        Genome bestGenome = ga.mainFun(population);
+        System.out.println(bestGenome.getFitness());
+        System.out.println(bestGenome.getSequence());
+        /*List<City> cities = new ArrayList<>();
         City city1 = new City(1, 2, 2);
         City city2 = new City(2, 2, 4);
         City city3 = new City(3, 2, 6);
@@ -51,6 +55,6 @@ public class Main {
         System.out.println(genome3.getSequence());
         System.out.println(child.getSequence());
         child = ga.mutation(child);
-        System.out.println(child.getSequence());
+        System.out.println(child.getSequence());*/
     }
 }

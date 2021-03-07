@@ -40,6 +40,11 @@ public class Genome {
     return  distance;
   }
 
+  @Override
+  public boolean equals(Object object){
+    return object instanceof Genome && this.sequence.equals(((Genome) object).sequence);
+  }
+
   private City findCityById(int id){
     for (City city : cities) {
       if (city.getId() == id) {
