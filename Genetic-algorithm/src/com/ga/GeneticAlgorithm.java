@@ -1,15 +1,19 @@
 package com.ga;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
+import java.util.concurrent.CompletionService;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class GeneticAlgorithm {
-    int numOfSurvivors;
-    int numOfCycles;
-    int numOfMutations;
-    Random random;
+    private final int numOfSurvivors;
+    private final int numOfCycles;
+    private final int numOfMutations;
+    private final Random random;
+    private final ExecutorService exec = Executors.newFixedThreadPool(10);
+    private CompletionService<Integer> service = new ExecutorCompletionService<>(exec);
+
 
     public GeneticAlgorithm(int numOfSurvivors, int numOfCycles, int numOfMutations) {
         this.numOfSurvivors = numOfSurvivors;
@@ -22,13 +26,13 @@ public class GeneticAlgorithm {
         int populationSize = population.size();
         Genome bestGenome = population.get(0);
         for (int i = 0; i < numOfCycles; i++) {
-            System.out.println("Population " + i);
-            List<Genome> bufPopulation = new ArrayList<>();
+            List<Genome> bufPopulation = new ArrayList<>();  // Buffer list for new children and survivors
             for (int j = 0; j < numOfSurvivors; j++) {
-                bufPopulation.add(roulette(population));
+                bufPopulation.add(roulette(population));  // Selecting survivors by roulette
             }
-            population.addAll(bufPopulation);
-            while (bufPopulation.size() < populationSize) {
+            population.addAll(bufPopulation);  // Returning survivors to initial population to make crossover possible
+            System.out.println("Roulette DONE");
+            while (bufPopulation.size() < populationSize) {  // Crossover
                 Genome parent1 = population.get(random.nextInt(populationSize));
                 Genome parent2 = population.get(random.nextInt(populationSize));
                 Genome parent3 = population.get(random.nextInt(populationSize));
@@ -36,16 +40,20 @@ public class GeneticAlgorithm {
                     bufPopulation.add(crossover(parent1, parent2, parent3));
                 }
             }
-            population = bufPopulation;
+            population = bufPopulation;  // Resulted population is main now
+            System.out.println("Crossover DONE");
             for (int j = 0; j < numOfMutations; j++) {
                 int rnd = random.nextInt(populationSize);
-                population.set(rnd, mutation(population.get(rnd)));
+                population.set(rnd, mutation(population.get(rnd)));  // Applying mutations
             }
+            System.out.println("Mutations DONE");
             for (Genome genome : population) {
-                if(genome.getFitness()<bestGenome.getFitness()){
+                if (genome.getFitness() < bestGenome.getFitness()) {  // Search for a best genome
                     bestGenome = genome;
                 }
             }
+            System.out.println("BEST " + bestGenome.getFitness());
+            System.out.println(bestGenome.getSequence());
 
         }
         return bestGenome;
@@ -71,17 +79,40 @@ public class GeneticAlgorithm {
 
     public Genome crossover(Genome parent1, Genome parent2, Genome parent3) {
         Genome child = new Genome(parent1);
-        List<Integer> sequence = new ArrayList<>(child.getSequence());
+        Integer[] sequence = new Integer[child.getSequence().size()];
+        long time = System.currentTimeMillis();
+        for (int i = 0; i < child.getSequence().size(); i++) {
+            sequence[i] = child.getSequence().get(i);
+        }
         int crossoverPoint1 = random.nextInt(parent1.getLength());
         int crossoverPoint2 = random.nextInt(parent1.getLength() - crossoverPoint1) + crossoverPoint1;
         for (int i = 0; i < crossoverPoint1; i++) {
-            Collections.swap(sequence, sequence.indexOf(parent2.getSequence().get(i)), i);
+            int bufIndex = 0;
+            for (int j = 0; j < sequence.length; j++) {
+                if(sequence[j] == parent2.getSequence().get(i)){
+                    bufIndex = j;
+                    break;
+                }
+            }
+            int buf = sequence[bufIndex];
+            sequence[bufIndex] = sequence[i];
+            sequence[i] = buf;
         }
         for (int i = crossoverPoint1; i < crossoverPoint2; i++) {
-            Collections.swap(sequence, sequence.indexOf(parent3.getSequence().get(i)), i);
+            int bufIndex = 0;
+            for (int j = 0; j < sequence.length; j++) {
+                if(sequence[j] == parent3.getSequence().get(i)){
+                    bufIndex = j;
+                    break;
+                }
+            }
+            int buf = sequence[bufIndex];
+            sequence[bufIndex] = sequence[i];
+            sequence[i] = buf;
         }
-        sequence.set(sequence.size() - 1, sequence.get(0));
-        child.setSequence(sequence);
+        sequence[sequence.length-1] = sequence[0];
+        child.setSequence(Arrays.asList(sequence));
+        System.out.println((double) System.currentTimeMillis() - time);
         child.setFitness(child.calculateFitness());
         return child;
     }
@@ -106,12 +137,15 @@ public class GeneticAlgorithm {
     public List<Genome> generatePopulation(Genome init, int size) {
         List<Genome> population = new ArrayList<>();
         for (int i = 0; i < size; i++) {
+            System.out.println("generating " + i + "/" + size);
             Genome newGenome = new Genome(init);
             List<Integer> newSequence = new ArrayList<>(init.getSequence());
             Collections.shuffle(newSequence);
             newSequence.add(newSequence.get(0));
             newGenome.setSequence(newSequence);
+            System.out.println("FITNESS CALCULATING");
             newGenome.setFitness(newGenome.calculateFitness());
+            System.out.println("FITNESS CALCULATED");
             population.add(newGenome);
         }
         return population;

@@ -17,7 +17,7 @@ public class Genome {
     length = cities.size();
     this.cities = cities;
     sequence = cities.stream().map(City::getId).collect(Collectors.toList());
-    fitness = calculateFitness();
+    //fitness = calculateFitness();
   }
 
   public Genome(Genome genome){
@@ -28,7 +28,7 @@ public class Genome {
   }
 
   double calculateFitness() {
-    long time = System.currentTimeMillis();
+    //long time = System.currentTimeMillis();
     double distance = 0;
     for (int i = 0; i < length - 1; i++) {
       double toAdd = Math.sqrt(Math.pow(cities.get(sequence.get(i)).getX() - cities.get(sequence.get(i + 1)).getX(), 2) +
@@ -38,7 +38,7 @@ public class Genome {
       }
       distance += toAdd;
     }
-    System.out.println((double) System.currentTimeMillis() - time);
+    //System.out.println((double) System.currentTimeMillis() - time);
     return  distance;
   }
 
