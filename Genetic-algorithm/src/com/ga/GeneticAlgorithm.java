@@ -75,7 +75,9 @@ public class GeneticAlgorithm {
             for (int j = 0; j < bestGenome.getLength(); j++) {
                 writer.print(bestGenome.getSequence()[j] + " ");
             }
-            writer.println("_______________________________");
+            writer.println();
+            writer.println("///////////////////////////////////////////////");
+            writer.println("///////////////////////////////////////////////");
         }
 
         writer.println("FINAL BEST : " + bestGenome.getFitness());
@@ -83,6 +85,7 @@ public class GeneticAlgorithm {
             writer.print(bestGenome.getSequence()[j] + " ");
         }
         writer.println();
+        writer.close();
 
         return bestGenome;
     }
