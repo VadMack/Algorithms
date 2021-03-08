@@ -3,6 +3,7 @@ package com.ga;
 import static com.ga.SupportClass.isPrime;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -11,12 +12,15 @@ public class Genome {
   private int length;
   private double fitness;
   private List<City> cities;
-  private List<Integer> sequence;
+  private int[] sequence;
 
   public Genome(List<City> cities) {
     length = cities.size();
     this.cities = cities;
-    sequence = cities.stream().map(City::getId).collect(Collectors.toList());
+    sequence = new int[cities.size()];
+    for (int i = 0; i < cities.size(); i++) {
+      sequence[i] = cities.get(i).getId();
+    }
     //fitness = calculateFitness();
   }
 
@@ -24,7 +28,7 @@ public class Genome {
     this.length = genome.getLength();
     this.fitness = genome.getFitness();
     this.cities = new ArrayList<>(genome.getCities());
-    this.sequence = new ArrayList<>(genome.getSequence());
+    sequence = Arrays.copyOf(genome.getSequence(), genome.getSequence().length);
   }
 
   double calculateFitness() {
@@ -62,11 +66,11 @@ public class Genome {
     this.cities = cities;
   }
 
-  public List<Integer> getSequence() {
+  public int[] getSequence() {
     return sequence;
   }
 
-  public void setSequence(List<Integer> sequence) {
+  public void setSequence(int[] sequence) {
     this.sequence = sequence;
   }
 

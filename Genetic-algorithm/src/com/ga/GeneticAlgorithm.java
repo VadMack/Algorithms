@@ -118,16 +118,18 @@ public class GeneticAlgorithm {
     }
 
     public Genome mutation(Genome genome) {
-        List<Integer> sequence = new ArrayList<>(genome.getSequence());
-        int first, last;
-        first = sequence.get(0);
-        last = sequence.get(sequence.size() - 1);
-        Collections.swap(sequence, random.nextInt(sequence.size()),
-                random.nextInt(sequence.size()));
-        if (!sequence.get(0).equals(first)) {
-            sequence.set(sequence.size() - 1, sequence.get(0));
-        } else if (!sequence.get(sequence.size() - 1).equals(last)) {
-            sequence.set(0, sequence.get(sequence.size() - 1));
+        int[] sequence = new int[genome.getLength()];
+        int first = sequence[0];
+        int last = sequence[sequence.length-1];
+        int bufIndex1 = random.nextInt(sequence.length);
+        int bufIndex2 = random.nextInt(sequence.length);
+        int buf = sequence[bufIndex1];
+        sequence[bufIndex1] = sequence[bufIndex2];
+        sequence[bufIndex2] = buf;
+        if (sequence[0] != first) {
+            sequence[sequence.length-1] = sequence[0];
+        } else if (sequence[sequence.length-1] != last) {
+            sequence[0] = sequence[sequence.length-1];
         }
         genome.setSequence(sequence);
         genome.setFitness(genome.calculateFitness());
@@ -142,6 +144,7 @@ public class GeneticAlgorithm {
             List<Integer> newSequence = new ArrayList<>(init.getSequence());
             Collections.shuffle(newSequence);
             newSequence.add(newSequence.get(0));
+
             newGenome.setSequence(newSequence);
             System.out.println("FITNESS CALCULATING");
             newGenome.setFitness(newGenome.calculateFitness());
