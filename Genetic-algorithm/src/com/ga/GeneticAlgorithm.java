@@ -26,6 +26,8 @@ public class GeneticAlgorithm {
         int populationSize = population.size();
         Genome bestGenome = population.get(0);
         for (int i = 0; i < numOfCycles; i++) {
+            long time = System.currentTimeMillis();
+
             List<Genome> bufPopulation = new ArrayList<>();  // Buffer list for new children and survivors
             for (int j = 0; j < numOfSurvivors; j++) {
                 bufPopulation.add(roulette(population));  // Selecting survivors by roulette
@@ -37,6 +39,7 @@ public class GeneticAlgorithm {
                 Genome parent2 = population.get(random.nextInt(populationSize));
                 Genome parent3 = population.get(random.nextInt(populationSize));
                 if (!parent1.equals(parent2) && !parent1.equals(parent3) && !parent2.equals(parent3)) {
+                    System.out.println("Parents selected");
                     bufPopulation.add(crossover(parent1, parent2, parent3));
                 }
             }
@@ -52,8 +55,9 @@ public class GeneticAlgorithm {
                     bestGenome = genome;
                 }
             }
-            System.out.println("BEST " + bestGenome.getFitness());
-            System.out.println(bestGenome.getSequence());
+            System.out.println("BEST " + bestGenome.getFitness() + " : ");
+
+            System.out.println("GENERATION done by " + ((double) System.currentTimeMillis() - time));
 
         }
         return bestGenome;
@@ -79,17 +83,15 @@ public class GeneticAlgorithm {
 
     public Genome crossover(Genome parent1, Genome parent2, Genome parent3) {
         Genome child = new Genome(parent1);
-        Integer[] sequence = new Integer[child.getSequence().size()];
+        Integer[] sequence = child.getSequence();
         long time = System.currentTimeMillis();
-        for (int i = 0; i < child.getSequence().size(); i++) {
-            sequence[i] = child.getSequence().get(i);
-        }
         int crossoverPoint1 = random.nextInt(parent1.getLength());
         int crossoverPoint2 = random.nextInt(parent1.getLength() - crossoverPoint1) + crossoverPoint1;
+        System.out.println("Crossover points selected :" + crossoverPoint1 + ", " + crossoverPoint2);
         for (int i = 0; i < crossoverPoint1; i++) {
             int bufIndex = 0;
             for (int j = 0; j < sequence.length; j++) {
-                if(sequence[j] == parent2.getSequence().get(i)){
+                if (sequence[j].equals(parent2.getSequence()[i])) {
                     bufIndex = j;
                     break;
                 }
@@ -98,10 +100,11 @@ public class GeneticAlgorithm {
             sequence[bufIndex] = sequence[i];
             sequence[i] = buf;
         }
+        System.out.println("Crossover 1 DONE");
         for (int i = crossoverPoint1; i < crossoverPoint2; i++) {
             int bufIndex = 0;
             for (int j = 0; j < sequence.length; j++) {
-                if(sequence[j] == parent3.getSequence().get(i)){
+                if (sequence[j] == parent3.getSequence()[i]) {
                     bufIndex = j;
                     break;
                 }
@@ -110,26 +113,27 @@ public class GeneticAlgorithm {
             sequence[bufIndex] = sequence[i];
             sequence[i] = buf;
         }
-        sequence[sequence.length-1] = sequence[0];
-        child.setSequence(Arrays.asList(sequence));
-        System.out.println((double) System.currentTimeMillis() - time);
+        System.out.println("Crossover 2 DONE");
+        sequence[sequence.length - 1] = sequence[0];
+        child.setSequence(sequence);
+        System.out.println("Crossover done by " + ((double) System.currentTimeMillis() - time));
         child.setFitness(child.calculateFitness());
         return child;
     }
 
     public Genome mutation(Genome genome) {
-        int[] sequence = new int[genome.getLength()];
+        Integer[] sequence = Arrays.copyOf(genome.getSequence(), genome.getLength());
         int first = sequence[0];
-        int last = sequence[sequence.length-1];
+        int last = sequence[sequence.length - 1];
         int bufIndex1 = random.nextInt(sequence.length);
         int bufIndex2 = random.nextInt(sequence.length);
         int buf = sequence[bufIndex1];
         sequence[bufIndex1] = sequence[bufIndex2];
         sequence[bufIndex2] = buf;
         if (sequence[0] != first) {
-            sequence[sequence.length-1] = sequence[0];
-        } else if (sequence[sequence.length-1] != last) {
-            sequence[0] = sequence[sequence.length-1];
+            sequence[sequence.length - 1] = sequence[0];
+        } else if (sequence[sequence.length - 1] != last) {
+            sequence[0] = sequence[sequence.length - 1];
         }
         genome.setSequence(sequence);
         genome.setFitness(genome.calculateFitness());
@@ -141,14 +145,14 @@ public class GeneticAlgorithm {
         for (int i = 0; i < size; i++) {
             System.out.println("generating " + i + "/" + size);
             Genome newGenome = new Genome(init);
-            List<Integer> newSequence = new ArrayList<>(init.getSequence());
-            Collections.shuffle(newSequence);
-            newSequence.add(newSequence.get(0));
-
+            Collections.shuffle(Arrays.asList(newGenome.getSequence()));
+            Integer[] newSequence = Arrays.copyOf(newGenome.getSequence(), newGenome.getLength() + 1);
+            newSequence[newSequence.length - 1] = newSequence[0];
             newGenome.setSequence(newSequence);
-            System.out.println("FITNESS CALCULATING");
+            newGenome.setLength(newGenome.getLength() + 1);
+            //System.out.println("FITNESS CALCULATING");
             newGenome.setFitness(newGenome.calculateFitness());
-            System.out.println("FITNESS CALCULATED");
+            //System.out.println("FITNESS CALCULATED");
             population.add(newGenome);
         }
         return population;
