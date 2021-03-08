@@ -67,9 +67,6 @@ public class GeneticAlgorithm {
             System.out.println("BEST " + bestGenome.getFitness() + " : ");
 
             System.out.println("GENERATION done by " + ((double) System.currentTimeMillis() - time));
-            for (int j = 0; j < bestGenome.getLength(); j++) {
-                System.out.print(bestGenome.getSequence()[j] + " ");
-            }
 
             writer.println("Generation " + i + " BEST : " + bestGenome.getFitness());
             for (int j = 0; j < bestGenome.getLength(); j++) {
