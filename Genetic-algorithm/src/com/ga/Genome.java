@@ -6,43 +6,37 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 public class Genome {
   private int length;
   private double fitness;
   private List<City> cities;
-  private int[] sequence;
+  Integer[] sequence;
 
   public Genome(List<City> cities) {
     length = cities.size();
     this.cities = cities;
-    sequence = new int[cities.size()];
-    for (int i = 0; i < cities.size(); i++) {
-      sequence[i] = cities.get(i).getId();
-    }
-    //fitness = calculateFitness();
+    sequence = cities.stream().map(City::getId).toArray(Integer[]::new);
+    fitness = calculateFitness();
   }
 
   public Genome(Genome genome){
     this.length = genome.getLength();
     this.fitness = genome.getFitness();
     this.cities = new ArrayList<>(genome.getCities());
-    sequence = Arrays.copyOf(genome.getSequence(), genome.getSequence().length);
+    this.sequence = Arrays.copyOf(genome.getSequence(), genome.getLength());
   }
 
   double calculateFitness() {
-    //long time = System.currentTimeMillis();
     double distance = 0;
     for (int i = 0; i < length - 1; i++) {
-      double toAdd = Math.sqrt(Math.pow(cities.get(sequence.get(i)).getX() - cities.get(sequence.get(i + 1)).getX(), 2) +
-          Math.pow(cities.get(sequence.get(i)).getY() - cities.get(sequence.get(i + 1)).getY(), 2));
-      if (!isPrime(sequence.get(i)) && (i % 10 == 0) && (i != 0)) {
+      double toAdd = Math.sqrt(Math.pow(cities.get(sequence[i]).getX() - cities.get(sequence[i + 1]).getX(), 2) +
+              Math.pow(cities.get(sequence[i]).getY() - cities.get(sequence[i + 1]).getY(), 2));
+      if (!isPrime(sequence[i]) && (i % 10 == 0) && (i != 0)) {
         toAdd *= 1.1;
       }
       distance += toAdd;
     }
-    //System.out.println((double) System.currentTimeMillis() - time);
     return  distance;
   }
 
@@ -66,11 +60,11 @@ public class Genome {
     this.cities = cities;
   }
 
-  public int[] getSequence() {
+  public Integer[] getSequence() {
     return sequence;
   }
 
-  public void setSequence(int[] sequence) {
+  public void setSequence(Integer[] sequence) {
     this.sequence = sequence;
   }
 
@@ -91,12 +85,10 @@ public class Genome {
   @Override
   public String toString() {
     return "Genome{" +
-        "length=" + length +
-        ", fitness=" + fitness +
-        ", cities=" + cities +
-        ", sequence=" + sequence +
-        '}';
+            "length=" + length +
+            ", fitness=" + fitness +
+            ", cities=" + cities +
+            ", sequence=" + Arrays.toString(sequence) +
+            '}';
   }
 }
-
-
