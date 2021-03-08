@@ -40,10 +40,14 @@ public class Main {
         System.out.println("file parsed");
         Genome initialGenome = new Genome(cities);
         System.out.println("initial created");
-        GeneticAlgorithm ga = new GeneticAlgorithm(6, 15, 1);
-        List<Genome> population = ga.generatePopulation(initialGenome, 15);
+        GeneticAlgorithm ga = new GeneticAlgorithm(2, 1, 1);
+        List<Genome> population = ga.generatePopulation(initialGenome, 5);
         System.out.println("generation generated");
+        System.out.println(cities.size());
+        System.out.println(population.get(3).getLength());
+        ga.mainFun(population);
+        /*
         Genome bestGenome = ga.mainFun(population);
-        System.out.println(bestGenome.getFitness());
+        System.out.println(bestGenome.getFitness());*/
     }
 }

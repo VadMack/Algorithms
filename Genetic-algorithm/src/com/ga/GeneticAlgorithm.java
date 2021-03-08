@@ -1,5 +1,6 @@
 package com.ga;
 
+import java.io.*;
 import java.util.*;
 import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutorCompletionService;
@@ -23,6 +24,13 @@ public class GeneticAlgorithm {
     }
 
     public Genome mainFun(List<Genome> population) {
+        PrintWriter writer = null;
+        try {
+            writer = new PrintWriter("output.txt");
+        } catch (IOException io) {
+            System.out.println("fileError");
+        }
+
         int populationSize = population.size();
         Genome bestGenome = population.get(0);
         for (int i = 0; i < numOfCycles; i++) {
@@ -39,11 +47,12 @@ public class GeneticAlgorithm {
                 Genome parent2 = population.get(random.nextInt(populationSize));
                 Genome parent3 = population.get(random.nextInt(populationSize));
                 if (!parent1.equals(parent2) && !parent1.equals(parent3) && !parent2.equals(parent3)) {
-                    System.out.println("Parents selected");
-                    bufPopulation.add(crossover(parent1, parent2, parent3));
+                System.out.println("Parents selected");
+                bufPopulation.add(crossover(parent1, parent2, parent3));
                 }
             }
             population = bufPopulation;  // Resulted population is main now
+            System.out.println(population.get(3).getLength());
             System.out.println("Crossover DONE");
             for (int j = 0; j < numOfMutations; j++) {
                 int rnd = random.nextInt(populationSize);
@@ -58,8 +67,23 @@ public class GeneticAlgorithm {
             System.out.println("BEST " + bestGenome.getFitness() + " : ");
 
             System.out.println("GENERATION done by " + ((double) System.currentTimeMillis() - time));
+            for (int j = 0; j < bestGenome.getLength(); j++) {
+                System.out.print(bestGenome.getSequence()[j] + " ");
+            }
 
+            writer.println("Generation " + i + " BEST : " + bestGenome.getFitness());
+            for (int j = 0; j < bestGenome.getLength(); j++) {
+                writer.print(bestGenome.getSequence()[j] + " ");
+            }
+            writer.println("_______________________________");
         }
+
+        writer.println("FINAL BEST : " + bestGenome.getFitness());
+        for (int j = 0; j < bestGenome.getLength(); j++) {
+            writer.print(bestGenome.getSequence()[j] + " ");
+        }
+        writer.println();
+
         return bestGenome;
     }
 
