@@ -9,15 +9,17 @@ public class GeneticAlgorithm {
     private final int numOfCycles;
     private final int numOfMutations;
     private final int numOfThreads;
+    private final int maxCyclesWithoutOptimization;
     private final Random random;
     ExecutorService service;
 
 
-    public GeneticAlgorithm(int numOfSurvivors, int numOfCycles, int numOfMutations, int numOfThreads) {
+    public GeneticAlgorithm(int numOfSurvivors, int numOfCycles, int numOfMutations, int numOfThreads, int maxCyclesWithoutOptimization) {
         this.numOfSurvivors = numOfSurvivors;
         this.numOfCycles = numOfCycles;
         this.numOfMutations = numOfMutations;
         this.numOfThreads = numOfThreads;
+        this.maxCyclesWithoutOptimization = maxCyclesWithoutOptimization;
         random = new Random();
     }
 
@@ -31,6 +33,7 @@ public class GeneticAlgorithm {
 
         int populationSize = population.size();
         Genome bestGenome = population.get(0);
+        int counter = 0;
         for (int i = 0; i < numOfCycles; i++) {
             long time = System.currentTimeMillis();
 
@@ -71,9 +74,12 @@ public class GeneticAlgorithm {
                 int rnd = random.nextInt(populationSize);
                 population.set(rnd, mutation(population.get(rnd)));  // Applying mutations
             }
+
+            boolean isBestChanged = false;
             for (Genome genome : population) {
                 if (genome.getFitness() < bestGenome.getFitness()) {  // Search for a best genome
                     bestGenome = genome;
+                    isBestChanged = true;
                 }
             }
             System.out.println("BEST " + bestGenome.getFitness() + " : ");
@@ -87,6 +93,15 @@ public class GeneticAlgorithm {
             writer.println();
             writer.println("///////////////////////////////////////////////");
             writer.println("///////////////////////////////////////////////");
+
+            if (!isBestChanged) {
+                counter++;
+            } else {
+                counter = 0;
+            }
+            if (counter >= maxCyclesWithoutOptimization) {
+                break;
+            }
         }
 
         writer.println("FINAL BEST : " + bestGenome.getFitness());

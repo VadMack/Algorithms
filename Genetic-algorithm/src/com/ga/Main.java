@@ -14,7 +14,7 @@ public class Main {
         System.out.println("file parsed");
         Genome initialGenome = new Genome(cities);
         System.out.println("initial created");
-        GeneticAlgorithm ga = new GeneticAlgorithm(Integer.parseInt(args[2]), Integer.parseInt(args[1]), Integer.parseInt(args[3]), Integer.parseInt(args[4]));
+        GeneticAlgorithm ga = new GeneticAlgorithm(Integer.parseInt(args[2]), Integer.parseInt(args[1]), Integer.parseInt(args[3]), Integer.parseInt(args[4]), Integer.parseInt(args[5]));
         List<Genome> population = ga.generatePopulation(initialGenome, Integer.parseInt(args[0]));
         System.out.println("generation generated");
         System.out.println(cities.size());
