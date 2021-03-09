@@ -2,24 +2,22 @@ package com.ga;
 
 import java.io.*;
 import java.util.*;
-import java.util.concurrent.CompletionService;
-import java.util.concurrent.ExecutorCompletionService;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 
 public class GeneticAlgorithm {
     private final int numOfSurvivors;
     private final int numOfCycles;
     private final int numOfMutations;
+    private final int numOfThreads;
     private final Random random;
-    private final ExecutorService exec = Executors.newFixedThreadPool(10);
-    private CompletionService<Integer> service = new ExecutorCompletionService<>(exec);
+    ExecutorService service;
 
 
-    public GeneticAlgorithm(int numOfSurvivors, int numOfCycles, int numOfMutations) {
+    public GeneticAlgorithm(int numOfSurvivors, int numOfCycles, int numOfMutations, int numOfThreads) {
         this.numOfSurvivors = numOfSurvivors;
         this.numOfCycles = numOfCycles;
         this.numOfMutations = numOfMutations;
+        this.numOfThreads = numOfThreads;
         random = new Random();
     }
 
@@ -41,24 +39,38 @@ public class GeneticAlgorithm {
                 bufPopulation.add(roulette(population));  // Selecting survivors by roulette
             }
             population.addAll(bufPopulation);  // Returning survivors to initial population to make crossover possible
-            System.out.println("Roulette DONE");
-            while (bufPopulation.size() < populationSize) {  // Crossover
+
+            // Selecting parents and adding them to crossover task, then putting task to queue
+            List<Callable<Genome>> todoList = new ArrayList<>();
+            for (int j = 0; j < populationSize - numOfSurvivors; j++) {
                 Genome parent1 = population.get(random.nextInt(populationSize));
                 Genome parent2 = population.get(random.nextInt(populationSize));
                 Genome parent3 = population.get(random.nextInt(populationSize));
                 if (!parent1.equals(parent2) && !parent1.equals(parent3) && !parent2.equals(parent3)) {
-                System.out.println("Parents selected");
-                bufPopulation.add(crossover(parent1, parent2, parent3));
+                    todoList.add(new Crossover(parent1, parent2, parent3));
+                } else {
+                    j--;
                 }
             }
+
+            // working with crossover queue in multiple threads
+            List<Future<Genome>> futureGenome = null;
+            service = Executors.newFixedThreadPool(numOfThreads);
+            try {
+                futureGenome = service.invokeAll(todoList);
+                for (Future<Genome> genomeFuture : futureGenome) {
+                    bufPopulation.add(genomeFuture.get());
+                }
+            } catch (InterruptedException | ExecutionException exception) {
+                System.out.println("caught" + exception.getMessage());
+            }
+            service.shutdown();
+
             population = bufPopulation;  // Resulted population is main now
-            System.out.println(population.get(3).getLength());
-            System.out.println("Crossover DONE");
             for (int j = 0; j < numOfMutations; j++) {
                 int rnd = random.nextInt(populationSize);
                 population.set(rnd, mutation(population.get(rnd)));  // Applying mutations
             }
-            System.out.println("Mutations DONE");
             for (Genome genome : population) {
                 if (genome.getFitness() < bestGenome.getFitness()) {  // Search for a best genome
                     bestGenome = genome;
@@ -66,7 +78,7 @@ public class GeneticAlgorithm {
             }
             System.out.println("BEST " + bestGenome.getFitness() + " : ");
 
-            System.out.println("GENERATION done by " + ((double) System.currentTimeMillis() - time));
+            System.out.println("\n/////////\nGENERATION done by " + ((double) System.currentTimeMillis() - time) + "\n");
 
             writer.println("Generation " + i + " BEST : " + bestGenome.getFitness());
             for (int j = 0; j < bestGenome.getLength(); j++) {
@@ -105,16 +117,61 @@ public class GeneticAlgorithm {
         return null;
     }
 
-    public Genome crossover(Genome parent1, Genome parent2, Genome parent3) {
+    public Genome mutation(Genome genome) {
+        Integer[] sequence = Arrays.copyOf(genome.getSequence(), genome.getLength());
+        int bufIndex1 = random.nextInt((sequence.length - 2) - 1) + 1;
+        int bufIndex2 = random.nextInt((sequence.length - 2) - 1) + 1;
+        int buf = sequence[bufIndex1];
+        sequence[bufIndex1] = sequence[bufIndex2];
+        sequence[bufIndex2] = buf;
+        genome.setSequence(sequence);
+        genome.setFitness(genome.calculateFitness());
+        return genome;
+    }
+
+    public List<Genome> generatePopulation(Genome init, int size) {
+        List<Callable<Genome>> todoList = new ArrayList<>();
+        List<Future<Genome>> futurePopulation;
+        List<Genome> population = new ArrayList<>();
+        service = Executors.newFixedThreadPool(numOfThreads);
+        for (int i = 0; i < size; i++) {
+            todoList.add(new GenomeGenerator(init));
+        }
+        try {
+            futurePopulation = service.invokeAll(todoList);
+            for (int i = 0; i < size; i++) {
+                population.add(futurePopulation.get(i).get());
+            }
+        } catch (InterruptedException | ExecutionException exception) {
+            System.out.println("caught" + exception.getMessage());
+        }
+        service.shutdown();
+        return population;
+    }
+
+}
+
+// Implementing Callable for crossover to be able to execute it in multiple threads
+class Crossover implements Callable<Genome> {
+    Genome parent1, parent2, parent3;
+    Random random;
+
+    public Crossover(Genome parent1, Genome parent2, Genome parent3) {
+        this.parent1 = parent1;
+        this.parent2 = parent2;
+        this.parent3 = parent3;
+        this.random = new Random();
+    }
+
+    private Genome crossover() {
         Genome child = new Genome(parent1);
         Integer[] sequence = child.getSequence();
         long time = System.currentTimeMillis();
-        int crossoverPoint1 = random.nextInt(parent1.getLength());
+        int crossoverPoint1 = random.nextInt((parent1.getLength() - 2) - 1) + 1;
         int crossoverPoint2 = random.nextInt(parent1.getLength() - crossoverPoint1) + crossoverPoint1;
-        System.out.println("Crossover points selected :" + crossoverPoint1 + ", " + crossoverPoint2);
-        for (int i = 0; i < crossoverPoint1; i++) {
+        for (int i = 1; i < crossoverPoint1; i++) {
             int bufIndex = 0;
-            for (int j = 0; j < sequence.length; j++) {
+            for (int j = 1; j < sequence.length - 1; j++) {
                 if (sequence[j].equals(parent2.getSequence()[i])) {
                     bufIndex = j;
                     break;
@@ -124,11 +181,10 @@ public class GeneticAlgorithm {
             sequence[bufIndex] = sequence[i];
             sequence[i] = buf;
         }
-        System.out.println("Crossover 1 DONE");
         for (int i = crossoverPoint1; i < crossoverPoint2; i++) {
             int bufIndex = 0;
-            for (int j = 0; j < sequence.length; j++) {
-                if (sequence[j] == parent3.getSequence()[i]) {
+            for (int j = 1; j < sequence.length - 1; j++) {
+                if (sequence[j].equals(parent3.getSequence()[i])) {
                     bufIndex = j;
                     break;
                 }
@@ -137,7 +193,6 @@ public class GeneticAlgorithm {
             sequence[bufIndex] = sequence[i];
             sequence[i] = buf;
         }
-        System.out.println("Crossover 2 DONE");
         sequence[sequence.length - 1] = sequence[0];
         child.setSequence(sequence);
         System.out.println("Crossover done by " + ((double) System.currentTimeMillis() - time));
@@ -145,41 +200,32 @@ public class GeneticAlgorithm {
         return child;
     }
 
-    public Genome mutation(Genome genome) {
-        Integer[] sequence = Arrays.copyOf(genome.getSequence(), genome.getLength());
-        int first = sequence[0];
-        int last = sequence[sequence.length - 1];
-        int bufIndex1 = random.nextInt(sequence.length);
-        int bufIndex2 = random.nextInt(sequence.length);
-        int buf = sequence[bufIndex1];
-        sequence[bufIndex1] = sequence[bufIndex2];
-        sequence[bufIndex2] = buf;
-        if (sequence[0] != first) {
-            sequence[sequence.length - 1] = sequence[0];
-        } else if (sequence[sequence.length - 1] != last) {
-            sequence[0] = sequence[sequence.length - 1];
-        }
-        genome.setSequence(sequence);
-        genome.setFitness(genome.calculateFitness());
-        return genome;
+    public Genome call() {
+        return crossover();
+    }
+}
+
+// Implementing Callable for generator to be able to execute it in multiple threads
+class GenomeGenerator implements Callable<Genome> {
+    private final Genome init;
+
+    public GenomeGenerator(Genome init) {
+        this.init = init;
     }
 
-    public List<Genome> generatePopulation(Genome init, int size) {
-        List<Genome> population = new ArrayList<>();
-        for (int i = 0; i < size; i++) {
-            System.out.println("generating " + i + "/" + size);
-            Genome newGenome = new Genome(init);
-            Collections.shuffle(Arrays.asList(newGenome.getSequence()));
-            Integer[] newSequence = Arrays.copyOf(newGenome.getSequence(), newGenome.getLength() + 1);
-            newSequence[newSequence.length - 1] = newSequence[0];
-            newGenome.setSequence(newSequence);
-            newGenome.setLength(newGenome.getLength() + 1);
-            //System.out.println("FITNESS CALCULATING");
-            newGenome.setFitness(newGenome.calculateFitness());
-            //System.out.println("FITNESS CALCULATED");
-            population.add(newGenome);
-        }
-        return population;
+    public Genome generatePopulation() {
+        Genome newGenome = new Genome(init);
+        Collections.shuffle(Arrays.asList(newGenome.getSequence()).subList(1, newGenome.getSequence().length));
+        Integer[] newSequence = Arrays.copyOf(newGenome.getSequence(), newGenome.getLength() + 1);
+        newSequence[newSequence.length - 1] = newSequence[0];
+        newGenome.setSequence(newSequence);
+        newGenome.setLength(newGenome.getLength() + 1);
+        newGenome.setFitness(newGenome.calculateFitness());
+        System.out.println("genome generated");
+        return newGenome;
     }
 
+    public Genome call() {
+        return generatePopulation();
+    }
 }
