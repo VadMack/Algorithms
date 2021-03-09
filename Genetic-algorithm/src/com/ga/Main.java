@@ -2,6 +2,9 @@ package com.ga;
 
 import static com.ga.FileHandler.importFromFile;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.List;
 
 public class Main {
@@ -18,5 +21,16 @@ public class Main {
         System.out.println(population.get(3).getLength());
         Genome bestGenome = ga.mainFun(population);
         System.out.println(bestGenome.getFitness());
+        PrintWriter writer = null;
+        try {
+            writer = new PrintWriter("Path.csv");
+        } catch (IOException io) {
+            System.out.println("fileError");
+        }
+        writer.println("Path");
+        for (int i = 0; i < bestGenome.getLength(); i++) {
+            writer.println(bestGenome.getSequence()[i]);
+        }
+        writer.close();
     }
 }
