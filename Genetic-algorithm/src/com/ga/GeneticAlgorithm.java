@@ -6,7 +6,6 @@ import java.util.concurrent.*;
 
 public class GeneticAlgorithm {
     private final int numOfSurvivors;
-    private final int numOfCycles;
     private final int numOfMutations;
     private final int numOfThreads;
     private final int maxCyclesWithoutOptimization;
@@ -14,9 +13,8 @@ public class GeneticAlgorithm {
     ExecutorService service;
 
 
-    public GeneticAlgorithm(int numOfSurvivors, int numOfCycles, int numOfMutations, int numOfThreads, int maxCyclesWithoutOptimization) {
+    public GeneticAlgorithm(int numOfSurvivors, int numOfMutations, int numOfThreads, int maxCyclesWithoutOptimization) {
         this.numOfSurvivors = numOfSurvivors;
-        this.numOfCycles = numOfCycles;
         this.numOfMutations = numOfMutations;
         this.numOfThreads = numOfThreads;
         this.maxCyclesWithoutOptimization = maxCyclesWithoutOptimization;
@@ -34,85 +32,86 @@ public class GeneticAlgorithm {
         int populationSize = population.size();
         Genome bestGenome = population.get(0);
         int counter = 0;
-        for (int i = 0; i < numOfCycles; i++) {
-            long time = System.currentTimeMillis();
+        int i = 0;
+            while (counter <= maxCyclesWithoutOptimization) {
+                long time = System.currentTimeMillis();
 
-            List<Genome> bufPopulation = new ArrayList<>();  // Buffer list for new children and survivors
-            for (int j = 0; j < numOfSurvivors; j++) {
-                bufPopulation.add(roulette(population));  // Selecting survivors by roulette
-            }
-            population.addAll(bufPopulation);  // Returning survivors to initial population to make crossover possible
+                List<Genome> bufPopulation = new ArrayList<>();  // Buffer list for new children and survivors
+                for (int j = 0; j < numOfSurvivors; j++) {
+                    bufPopulation.add(roulette(population));  // Selecting survivors by roulette
+                }
+                population.addAll(bufPopulation);  // Returning survivors to initial population to make crossover possible
 
-            // Selecting parents and adding them to crossover task, then putting task to queue
-            List<Callable<Genome>> todoList = new ArrayList<>();
-            for (int j = 0; j < populationSize - numOfSurvivors; j++) {
-                Genome parent1 = population.get(random.nextInt(populationSize));
-                Genome parent2 = population.get(random.nextInt(populationSize));
-                Genome parent3 = population.get(random.nextInt(populationSize));
-                if (!parent1.equals(parent2) && !parent1.equals(parent3) && !parent2.equals(parent3)) {
-                    todoList.add(new Crossover(parent1, parent2, parent3));
+                // Selecting parents and adding them to crossover task, then putting task to queue
+                List<Callable<Genome>> todoList = new ArrayList<>();
+                for (int j = 0; j < populationSize - numOfSurvivors; j++) {
+                    Genome parent1 = population.get(random.nextInt(populationSize));
+                    Genome parent2 = population.get(random.nextInt(populationSize));
+                    Genome parent3 = population.get(random.nextInt(populationSize));
+                    if (!parent1.equals(parent2) && !parent1.equals(parent3) && !parent2.equals(parent3)) {
+                        todoList.add(new Crossover(parent1, parent2, parent3));
+                    } else {
+                        j--;
+                    }
+                }
+
+                // working with crossover queue in multiple threads
+                List<Future<Genome>> futureGenome = null;
+                service = Executors.newFixedThreadPool(numOfThreads);
+                try {
+                    futureGenome = service.invokeAll(todoList);
+                    for (Future<Genome> genomeFuture : futureGenome) {
+                        bufPopulation.add(genomeFuture.get());
+                    }
+                } catch (InterruptedException | ExecutionException exception) {
+                    System.out.println("caught" + exception.getMessage());
+                }
+                service.shutdown();
+
+                population = bufPopulation;  // Resulted population is main now
+                for (int j = 0; j < numOfMutations; j++) {
+                    int rnd = random.nextInt(populationSize);
+                    population.set(rnd, mutation(population.get(rnd)));  // Applying mutations
+                }
+
+                boolean isBestChanged = false;
+                for (Genome genome : population) {
+                    if (genome.getFitness() < bestGenome.getFitness()) {  // Search for a best genome
+                        bestGenome = genome;
+                        isBestChanged = true;
+                    }
+                }
+
+                writer.println("Generation " + i + " BEST : " + bestGenome.getFitness());
+                for (int j = 0; j < bestGenome.getLength(); j++) {
+                    writer.print(bestGenome.getSequence()[j] + " ");
+                }
+                writer.println();
+                writer.println("///////////////////////////////////////////////");
+                writer.println("///////////////////////////////////////////////");
+
+                System.out.println("\n/////////\nGENERATION #" + i + " done by " + ((double) System.currentTimeMillis() - time));
+                System.out.println("BEST " + bestGenome.getFitness());
+                System.out.println("Without optimizations: " + counter + " of maximum " + maxCyclesWithoutOptimization);
+
+                if (!isBestChanged) {
+                    counter++;
                 } else {
-                    j--;
+                    counter = 0;
                 }
+
+                i++;
             }
 
-            // working with crossover queue in multiple threads
-            List<Future<Genome>> futureGenome = null;
-            service = Executors.newFixedThreadPool(numOfThreads);
-            try {
-                futureGenome = service.invokeAll(todoList);
-                for (Future<Genome> genomeFuture : futureGenome) {
-                    bufPopulation.add(genomeFuture.get());
-                }
-            } catch (InterruptedException | ExecutionException exception) {
-                System.out.println("caught" + exception.getMessage());
-            }
-            service.shutdown();
-
-            population = bufPopulation;  // Resulted population is main now
-            for (int j = 0; j < numOfMutations; j++) {
-                int rnd = random.nextInt(populationSize);
-                population.set(rnd, mutation(population.get(rnd)));  // Applying mutations
-            }
-
-            boolean isBestChanged = false;
-            for (Genome genome : population) {
-                if (genome.getFitness() < bestGenome.getFitness()) {  // Search for a best genome
-                    bestGenome = genome;
-                    isBestChanged = true;
-                }
-            }
-            System.out.println("BEST " + bestGenome.getFitness() + " : ");
-
-            System.out.println("\n/////////\nGENERATION done by " + ((double) System.currentTimeMillis() - time) + "\n");
-
-            writer.println("Generation " + i + " BEST : " + bestGenome.getFitness());
+            writer.println("FINAL BEST : " + bestGenome.getFitness());
             for (int j = 0; j < bestGenome.getLength(); j++) {
                 writer.print(bestGenome.getSequence()[j] + " ");
             }
             writer.println();
-            writer.println("///////////////////////////////////////////////");
-            writer.println("///////////////////////////////////////////////");
+            writer.close();
 
-            if (!isBestChanged) {
-                counter++;
-            } else {
-                counter = 0;
-            }
-            if (counter >= maxCyclesWithoutOptimization) {
-                break;
-            }
+            return bestGenome;
         }
-
-        writer.println("FINAL BEST : " + bestGenome.getFitness());
-        for (int j = 0; j < bestGenome.getLength(); j++) {
-            writer.print(bestGenome.getSequence()[j] + " ");
-        }
-        writer.println();
-        writer.close();
-
-        return bestGenome;
-    }
 
     public Genome roulette(List<Genome> genomes) {
         List<Double> wheel = new ArrayList<>();
@@ -210,7 +209,6 @@ class Crossover implements Callable<Genome> {
         }
         sequence[sequence.length - 1] = sequence[0];
         child.setSequence(sequence);
-        System.out.println("Crossover done by " + ((double) System.currentTimeMillis() - time));
         child.setFitness(child.calculateFitness());
         return child;
     }
@@ -236,7 +234,6 @@ class GenomeGenerator implements Callable<Genome> {
         newGenome.setSequence(newSequence);
         newGenome.setLength(newGenome.getLength() + 1);
         newGenome.setFitness(newGenome.calculateFitness());
-        System.out.println("genome generated");
         return newGenome;
     }
 
