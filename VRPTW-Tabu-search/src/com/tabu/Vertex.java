@@ -10,11 +10,13 @@ public class Vertex {
   private int startTime;
   private int finishTime;
   private int serviceTime;
+  private boolean isUsed;
 
   public Vertex() {
   }
 
-  public Vertex(int id, int x, int y, int demand, int startTime, int finishTime, int serviceTime) {
+  public Vertex(int id, int x, int y, int demand, int startTime, int finishTime, int serviceTime,
+      boolean isUsed) {
     this.id = id;
     this.x = x;
     this.y = y;
@@ -22,6 +24,7 @@ public class Vertex {
     this.startTime = startTime;
     this.finishTime = finishTime;
     this.serviceTime = serviceTime;
+    this.isUsed = isUsed;
   }
 
   public int getId() {
@@ -80,6 +83,14 @@ public class Vertex {
     this.serviceTime = serviceTime;
   }
 
+  public boolean isUsed() {
+    return isUsed;
+  }
+
+  public void setUsed(boolean used) {
+    isUsed = used;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -91,12 +102,12 @@ public class Vertex {
     Vertex vertex = (Vertex) o;
     return id == vertex.id && x == vertex.x && y == vertex.y && demand == vertex.demand
         && startTime == vertex.startTime && finishTime == vertex.finishTime
-        && serviceTime == vertex.serviceTime;
+        && serviceTime == vertex.serviceTime && isUsed == vertex.isUsed;
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, x, y, demand, startTime, finishTime, serviceTime);
+    return Objects.hash(id, x, y, demand, startTime, finishTime, serviceTime, isUsed);
   }
 
   @Override
@@ -109,6 +120,7 @@ public class Vertex {
         ", startTime=" + startTime +
         ", finishTime=" + finishTime +
         ", serviceTime=" + serviceTime +
+        ", isUsed=" + isUsed +
         '}';
   }
 }

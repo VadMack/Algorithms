@@ -7,9 +7,10 @@ import java.util.List;
 import java.util.Scanner;
 
 public class Tabu {
-  private static int numOfVertices;
-  private static int numOfCars;
-  private static int carCapacity;
+  private int numOfVertices;
+  private int numOfCars;
+  private int carCapacity;
+  private int[][] pathLengths;
 
   public List<Vertex> importFromFile(String path) {
     List<Vertex> vertices = new ArrayList<>();
@@ -38,4 +39,27 @@ public class Tabu {
     }
     return vertices;
   }
+
+  public double[][] fillLengths(List<Vertex> vertices){
+    double[][] lengths = new double[numOfVertices][numOfVertices];
+    for (int i = 0; i < numOfVertices; i++) {
+      for (int j = 0; j < numOfVertices; j++) {
+        if (i == j) {
+          lengths[i][j] = Integer.MAX_VALUE;
+          continue;
+        }
+        lengths[i][j] = Math.sqrt((Math.pow(vertices.get(j).getX() - vertices.get(i).getX(), 2))
+        + Math.pow(vertices.get(j).getY() - vertices.get(i).getY(), 2));
+      }
+    }
+    return lengths;
+  }
+
+
+
+
+
+
+
+
 }
