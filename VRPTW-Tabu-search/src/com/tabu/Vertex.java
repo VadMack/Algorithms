@@ -10,6 +10,7 @@ public class Vertex {
   private int startTime;
   private int finishTime;
   private int serviceTime;
+  private double servicedTime;
   private boolean isUsed;
 
   public Vertex() {
@@ -89,6 +90,14 @@ public class Vertex {
 
   public void setUsed(boolean used) {
     isUsed = used;
+  }
+
+  public double getServicedTime() {
+    return servicedTime;
+  }
+
+  public void setServicedTime(double servicedTime) {
+    this.servicedTime = servicedTime;
   }
 
   @Override
