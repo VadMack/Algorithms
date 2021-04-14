@@ -55,13 +55,11 @@ public class Vehicle {
                 capacity -= nearestVertex.getDemand();
             }
         }
-        if (!((time + pathLengths[route.get(route.size() - 1).getId()][0]) <= vertices.get(0).getFinishTime())) {
-            while ((time + pathLengths[route.get(route.size() - 1).getId()][0]) > vertices.get(0).getFinishTime()) {
-                capacity += route.get(route.size() - 1).getDemand();
-                route.get(route.size() - 1).setUsed(false);
-                route.remove(route.size() - 1);
-                time = route.get(route.size() - 1).getServicedTime();
-            }
+        while ((time + pathLengths[route.get(route.size() - 1).getId()][0]) > vertices.get(0).getFinishTime()) {
+            capacity += route.get(route.size() - 1).getDemand();
+            route.get(route.size() - 1).setUsed(false);
+            route.remove(route.size() - 1);
+            time = route.get(route.size() - 1).getServicedTime();
         }
         route.add(vertices.get(0));
         time += pathLengths[route.get(route.size() - 1).getId()][0];
