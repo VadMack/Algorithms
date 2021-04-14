@@ -10,20 +10,26 @@ public class Tabu {
   private int numOfVertices;
   private int numOfCars;
   private int carCapacity;
-  private int[][] pathLengths;
+  private double[][] pathLengths;
+  private List<Vertex> vertices;
 
-  public List<Vertex> importFromFile(String path) {
-    List<Vertex> vertices = new ArrayList<>();
+  public Tabu() {
+    vertices = new ArrayList<>();
+    importFromFile("input.txt");
+    pathLengths = fillLengths(vertices);
+  }
+
+  public void importFromFile(String path) {
     try {
       Scanner scanner = new Scanner(new File(path));
-      numOfVertices = scanner.nextInt();
+      numOfVertices = scanner.nextInt() + 1;
       numOfCars = scanner.nextInt();
       carCapacity = scanner.nextInt();
 
       while (scanner.hasNextLine()) {
         Vertex vertex = new Vertex();
         if (!scanner.hasNextInt()){
-          return vertices;
+          return;
         }
         vertex.setId(scanner.nextInt());
         vertex.setY(scanner.nextInt());
@@ -37,7 +43,6 @@ public class Tabu {
     } catch (FileNotFoundException e) {
       System.err.println("FileNotFoundException: " + e.getMessage());
     }
-    return vertices;
   }
 
   public double[][] fillLengths(List<Vertex> vertices){
@@ -55,7 +60,15 @@ public class Tabu {
     return lengths;
   }
 
+  public void createVehicles() {
+    List<Vehicle> vehicles = new ArrayList<>();
 
+    for (int i = 0; i < 25; i++) {
+      vehicles.add(new Vehicle(200, vertices, pathLengths));
+      System.out.println(vehicles.get(i));
+    }
+
+  }
 
 
 
