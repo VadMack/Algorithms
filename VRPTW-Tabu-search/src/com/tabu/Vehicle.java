@@ -41,7 +41,7 @@ public class Vehicle {
             }
 
             if (nearestVertex == null) {
-                System.out.println("Nearest vertex not found");
+               // System.out.println("Nearest vertex not found");
                 break;
             } else {
                 nearestVertex.setServicedTime(vertices.get(i).getServicedTime() +
@@ -70,6 +70,17 @@ public class Vehicle {
             time += pathLengths[route.get(route.size() - 1).getId()][0];
         }
         route.add(vertices.get(0));
+    }
+
+    public void recalculate(int start, double[][] pathLengths) {
+        for (int i = start; i < route.size(); i++) {
+            route.get(i).setServicedTime(route.get(i - 1).getServicedTime() +
+                    pathLengths[route.get(i - 1).getId()][route.get(i).getId()] +
+                    Math.max(route.get(i).getStartTime() - route.get(i - 1).getServicedTime() -
+                            pathLengths[route.get(i - 1).getId()][route.get(i).getId()], 0) +
+                    route.get(i).getServiceTime());
+        }
+        time = route.get(route.size() - 1).getServicedTime();
     }
 
     @Override
