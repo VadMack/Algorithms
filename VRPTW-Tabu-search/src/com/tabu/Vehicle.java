@@ -7,14 +7,23 @@ import java.util.stream.Collectors;
 
 public class Vehicle {
 
+    private final int startingCapacity;
     private int capacity;
     private double time;
     List<Vertex> route;
 
     public Vehicle(int capacity, List<Vertex> vertices, double[][] pathLengths) {
+        this.startingCapacity = capacity;
         this.capacity = capacity;
         this.time = 0;
         createInitial(vertices, pathLengths);
+    }
+
+    public Vehicle(Vehicle clone) {
+        this.startingCapacity = clone.startingCapacity;
+        this.capacity = clone.capacity;
+        this.time = clone.time;
+        this.route = clone.route;
     }
 
     private void createInitial(List<Vertex> vertices, double[][] pathLengths) {
@@ -41,7 +50,7 @@ public class Vehicle {
             }
 
             if (nearestVertex == null) {
-               // System.out.println("Nearest vertex not found");
+                // System.out.println("Nearest vertex not found");
                 break;
             } else {
                 nearestVertex.setServicedTime(vertices.get(i).getServicedTime() +
@@ -72,15 +81,37 @@ public class Vehicle {
         route.add(vertices.get(0));
     }
 
-    public void recalculate(int start, double[][] pathLengths) {
-        for (int i = start; i < route.size(); i++) {
+    public double getTime() {
+        return time;
+    }
+
+    public void setTime(double time) {
+        this.time = time;
+    }
+
+    public void recalculate(int start, double[][] pathLengths, boolean isCapacityChanged) {
+        for (int i = start; i < route.size() - 1; i++) {
             route.get(i).setServicedTime(route.get(i - 1).getServicedTime() +
                     pathLengths[route.get(i - 1).getId()][route.get(i).getId()] +
                     Math.max(route.get(i).getStartTime() - route.get(i - 1).getServicedTime() -
                             pathLengths[route.get(i - 1).getId()][route.get(i).getId()], 0) +
                     route.get(i).getServiceTime());
         }
-        time = route.get(route.size() - 1).getServicedTime();
+        if (isCapacityChanged) {
+            capacity = startingCapacity;
+            for (Vertex vertex : route) {
+                capacity -= vertex.getDemand();
+            }
+        }
+        time = route.get(route.size() - 2).getServicedTime() + pathLengths[route.get(route.size() - 2).getId()][0];
+    }
+
+    public int getCapacity() {
+        return capacity;
+    }
+
+    public void setCapacity(int capacity) {
+        this.capacity = capacity;
     }
 
     @Override
