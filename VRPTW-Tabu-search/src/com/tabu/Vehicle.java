@@ -10,7 +10,7 @@ public class Vehicle {
     private final int startingCapacity;
     private int capacity;
     private double time;
-    List<Vertex> route;
+    private List<Vertex> route;
 
     public Vehicle(int capacity, List<Vertex> vertices, double[][] pathLengths) {
         this.startingCapacity = capacity;
@@ -112,6 +112,18 @@ public class Vehicle {
 
     public void setCapacity(int capacity) {
         this.capacity = capacity;
+    }
+
+    public int getStartingCapacity() {
+        return startingCapacity;
+    }
+
+    public List<Vertex> getRoute() {
+        return route;
+    }
+
+    public void setRoute(List<Vertex> route) {
+        this.route = route;
     }
 
     @Override
