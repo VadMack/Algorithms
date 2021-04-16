@@ -13,7 +13,7 @@ public class Tabu {
   private int numOfVertices;
   private int numOfCars;
   private int carCapacity;
-  private double[][] pathLengths;
+  private final double[][] pathLengths;
   private List<Vertex> vertices;
   private List<TabuElem> tabuElems;
   private List<Vehicle> vehicles;
@@ -33,8 +33,9 @@ public class Tabu {
       while (vehicle.getRoute().isEmpty()) {
         vehicle = vehicles.get(random.nextInt(numOfCars));
       }
+      System.out.println(vehicle);
       innerExchange(vehicle);
-
+      System.out.println(vehicle);
       Iterator<TabuElem> iterator = tabuElems.iterator();
       while (iterator.hasNext()){
         TabuElem tabuElem = iterator.next();
@@ -43,6 +44,7 @@ public class Tabu {
           iterator.remove();
         }
       }
+      System.out.println(tabuElems);
     }
   }
 
@@ -99,10 +101,7 @@ public class Tabu {
   public void exchangeBetween(Vehicle vehicle1, Vehicle vehicle2) {
     for (int i = 1; i < vehicle1.getRoute().size() - 1; i++) {
       for (int j = 1; j < vehicle2.getRoute().size() - 1; j++) {
-        if (vehicle2.getRoute().get(j).getFinishTime() >= vehicle1.getRoute().get(i - 1).getServicedTime() +
-            pathLengths[vehicle1.getRoute().get(i - 1).getId()][vehicle2.getRoute().get(j).getId()] &&
-            vehicle1.getRoute().get(i).getFinishTime() >= vehicle2.getRoute().get(j - 1).getServicedTime() +
-                pathLengths[vehicle2.getRoute().get(j - 1).getId()][vehicle1.getRoute().get(i).getId()] &&
+        if (checkNeighboursTimeLimits(vehicle1, i, vehicle2, j) &&
             vehicle1.getCapacity() + vehicle1.getRoute().get(i).getDemand() -
                 vehicle2.getRoute().get(j).getDemand() >= 0 &&
             vehicle2.getCapacity() + vehicle2.getRoute().get(j).getDemand() -
@@ -128,10 +127,7 @@ public class Tabu {
   public void innerExchange(Vehicle vehicle) {
     for (int i = 1; i < vehicle.getRoute().size() - 1; i++) {
       for (int j = i + 1; j < vehicle.getRoute().size() - 1; j++) {
-        if (vehicle.getRoute().get(j).getFinishTime() >= vehicle.getRoute().get(i - 1).getServicedTime() +
-            pathLengths[vehicle.getRoute().get(i - 1).getId()][vehicle.getRoute().get(j).getId()] &&
-            vehicle.getRoute().get(i).getFinishTime() >= vehicle.getRoute().get(j - 1).getServicedTime() +
-                pathLengths[vehicle.getRoute().get(j - 1).getId()][vehicle.getRoute().get(i).getId()] &&
+        if (checkNeighboursTimeLimits(vehicle, i, vehicle, j) &&
         !isInTabu(vehicle.getRoute().get(i).getId(), vehicle.getRoute().get(j).getId())) {
           swap(vehicle, i, vehicle, j);
           vehicle.recalculate(i, pathLengths, false);
@@ -164,6 +160,13 @@ public class Tabu {
       }
     }
     return false;
+  }
+
+  private boolean checkNeighboursTimeLimits(Vehicle vehicle1, int i, Vehicle vehicle2, int j){
+    return (vehicle2.getRoute().get(j).getFinishTime() >= vehicle1.getRoute().get(i - 1).getServicedTime() +
+            pathLengths[vehicle1.getRoute().get(i - 1).getId()][vehicle2.getRoute().get(j).getId()] &&
+            vehicle1.getRoute().get(i).getFinishTime() >= vehicle2.getRoute().get(j - 1).getServicedTime() +
+                    pathLengths[vehicle2.getRoute().get(j - 1).getId()][vehicle1.getRoute().get(i).getId()]);
   }
 
 }
