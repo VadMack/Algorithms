@@ -8,6 +8,9 @@ public class Move {
   private double newTime1;
   private double newTime2;
 
+  public Move() {
+  }
+
   public Move(Vehicle vehicle1, int i, Vehicle vehicle2, int j, double newTime1, double newTime2) {
     this.i = i;
     this.j = j;

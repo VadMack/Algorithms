@@ -134,14 +134,9 @@ public class Vertex {
     @Override
     public String toString() {
         return "Vertex{" +
-                "id=" + id +
-                ", x=" + x +
-                ", y=" + y +
-                ", demand=" + demand +
                 ", startTime=" + startTime +
                 ", finishTime=" + finishTime +
-                ", serviceTime=" + serviceTime +
-                ", isUsed=" + isUsed +
+                ", servicedTime=" + servicedTime +
                 '}';
     }
 }

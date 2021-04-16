@@ -11,12 +11,14 @@ public class Vehicle {
     private int capacity;
     private double time;
     private List<Vertex> route;
+    private double penalty;
 
     public Vehicle(int capacity, List<Vertex> vertices, double[][] pathLengths) {
         this.startingCapacity = capacity;
         this.capacity = capacity;
         this.time = 0;
         createInitial(vertices, pathLengths);
+        this.penalty = 0;
     }
 
     public Vehicle(Vehicle clone) {
@@ -126,6 +128,14 @@ public class Vehicle {
         this.route = route;
     }
 
+    public double getPenalty() {
+        return penalty;
+    }
+
+    public void setPenalty(double penalty) {
+        this.penalty = penalty;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -135,29 +145,23 @@ public class Vehicle {
             return false;
         }
         Vehicle vehicle = (Vehicle) o;
-        return capacity == vehicle.capacity && time == vehicle.time && Objects
-                .equals(route, vehicle.route);
+        return startingCapacity == vehicle.startingCapacity && capacity == vehicle.capacity
+            && Double.compare(vehicle.time, time) == 0
+            && Double.compare(vehicle.penalty, penalty) == 0 && Objects
+            .equals(route, vehicle.route);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(capacity, time, route);
-    }
-
-    private String route() {
-        if (this.route == null) {
-            return "error";
-        }
-        return this.route.stream().map(Vertex::getId).map(Object::toString)
-                .collect(Collectors.joining(","));
+        return Objects.hash(startingCapacity, capacity, time, route, penalty);
     }
 
     @Override
     public String toString() {
         return "Vehicle{" +
-                "capacity=" + capacity +
-                ", time=" + time +
-                ", route=" + route() +
-                '}';
+            ", time=" + time +
+            ", route=" + route +
+            ", penalty=" + penalty +
+            '}';
     }
 }
