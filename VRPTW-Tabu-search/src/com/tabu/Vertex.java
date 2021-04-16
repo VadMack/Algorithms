@@ -28,6 +28,17 @@ public class Vertex {
         this.isUsed = isUsed;
     }
 
+    public Vertex(Vertex clone){
+        this.id = clone.id;
+        this.x = clone.x;
+        this.y = clone.y;
+        this.demand = clone.demand;
+        this.startTime = clone.startTime;
+        this.finishTime = clone.finishTime;
+        this.serviceTime = clone.serviceTime;
+        this.isUsed = clone.isUsed;
+    }
+
 
     public int getId() {
         return id;
