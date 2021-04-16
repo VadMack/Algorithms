@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
+import java.util.Iterator;
 
 public class Tabu {
 
@@ -33,11 +34,13 @@ public class Tabu {
         vehicle = vehicles.get(random.nextInt(numOfCars));
       }
       innerExchange(vehicle);
-      for (TabuElem tabuElem :
-          tabuElems) {
+
+      Iterator<TabuElem> iterator = tabuElems.iterator();
+      while (iterator.hasNext()){
+        TabuElem tabuElem = iterator.next();
         tabuElem.decrementTime();
         if (tabuElem.getTime() <= 0) {
-          tabuElems.remove(tabuElem);
+          iterator.remove();
         }
       }
     }
