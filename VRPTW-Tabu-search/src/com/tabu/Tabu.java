@@ -17,27 +17,49 @@ public class Tabu {
   private List<Vertex> vertices;
   private List<TabuElem> tabuElems;
   private List<Vehicle> vehicles;
+  private List<Vehicle> bestSolution;
+  private List<List<Vehicle>> solutionNeighbourhood;
+  private double bestTime;
 
   public Tabu() {
     vertices = new ArrayList<>();
     tabuElems = new ArrayList<>();
+    bestSolution = new ArrayList<>();
+    bestTime = Double.MAX_VALUE;
     importFromFile("input.txt");
     pathLengths = fillLengths(vertices);
     createVehicles();
   }
 
+
   public void algorithm() {
-    for (int i = 0; i < 1000; i++) {
+    List<Vehicle> best
+    solutionNeighbourhood = new ArrayList<List<Vehicle>>();
+    for (int i = 0; i < 100; i++) {
       Random random = new Random();
-      Vehicle vehicle = vehicles.get(random.nextInt(numOfCars));
+      int randId = random.nextInt(numOfCars);
+      Vehicle vehicle = new Vehicle(vehicles.get(randId));
       while (vehicle.getRoute().isEmpty()) {
-        vehicle = vehicles.get(random.nextInt(numOfCars));
+        randId = random.nextInt(numOfCars);
+        vehicle = new Vehicle(vehicles.get(randId));
       }
       System.out.println(vehicle);
       innerExchange(vehicle);
       System.out.println(vehicle);
+      solutionNeighbourhood.add(List.copyOf(vehicles));
+      solutionNeighbourhood.get(solutionNeighbourhood.size() - 1).set(randId, vehicle);
+    }
+    for (List<Vehicle> potentialSolution:
+    solutionNeighbourhood) {
+
+    }
+    double currentTime = 0;
+    for (Vehicle oneVehicle :
+        solutionNeighbourhood.get(solutionNeighbourhood.size() - 1)) {
+      currentTime += oneVehicle.getTime();
+    }
       Iterator<TabuElem> iterator = tabuElems.iterator();
-      while (iterator.hasNext()){
+      while (iterator.hasNext()) {
         TabuElem tabuElem = iterator.next();
         tabuElem.decrementTime();
         if (tabuElem.getTime() <= 0) {
@@ -45,7 +67,18 @@ public class Tabu {
         }
       }
       System.out.println(tabuElems);
-    }
+
+      double currentTime = 0;
+      for (Vehicle oneVehicle :
+          vehicles) {
+        currentTime += oneVehicle.getTime();
+      }
+
+      if (currentTime > bestTime) {
+
+      }
+
+
   }
 
   public void importFromFile(String path) {
@@ -116,7 +149,8 @@ public class Tabu {
             vehicle1.recalculate(i, pathLengths, true);
             vehicle2.recalculate(j, pathLengths, true);
           } else {
-            tabuElems.add(new TabuElem(vehicle1.getRoute().get(i).getId(), vehicle2.getRoute().get(j).getId()));
+            /*tabuElems.add(new TabuElem(vehicle1.getRoute().get(i).getId(),
+                vehicle2.getRoute().get(j).getId()));*/
             break;
           }
         }
@@ -125,22 +159,30 @@ public class Tabu {
   }
 
   public void innerExchange(Vehicle vehicle) {
+    List<Pair> poolOfSolutions = new ArrayList<>();
+
     for (int i = 1; i < vehicle.getRoute().size() - 1; i++) {
       for (int j = i + 1; j < vehicle.getRoute().size() - 1; j++) {
         if (checkNeighboursTimeLimits(vehicle, i, vehicle, j) &&
-        !isInTabu(vehicle.getRoute().get(i).getId(), vehicle.getRoute().get(j).getId())) {
+            !isInTabu(vehicle.getRoute().get(i).getId(), vehicle.getRoute().get(j).getId())) {
           swap(vehicle, i, vehicle, j);
           vehicle.recalculate(i, pathLengths, false);
-          if (vehicle.getTime() > vertices.get(0).getFinishTime()) {
-            swap(vehicle, i, vehicle, j);
-            vehicle.recalculate(i, pathLengths, false);
-          } else {
-            tabuElems.add(new TabuElem(vehicle.getRoute().get(i).getId(), vehicle.getRoute().get(j).getId()));
-            break;
+          // acceptable time
+          if (vehicle.getTime() <= vertices.get(0).getFinishTime()) {
+            //save to pool here
+            poolOfSolutions.add(new Pair(i, j));
           }
+          swap(vehicle, i, vehicle, j);
+          vehicle.recalculate(i, pathLengths, false);
+            /*tabuElems.add(
+                new TabuElem(vehicle.getRoute().get(i).getId(), vehicle.getRoute().get(j).getId()));*/
+            //break;
         }
       }
     }
+    Random random = new Random();
+    Pair pair = poolOfSolutions.get(random.nextInt(poolOfSolutions.size()));
+    swap(vehicle, pair.getId1(), vehicle, pair.getId2());
   }
 
   public void swap(Vehicle vehicle1, int toSwap1, Vehicle vehicle2, int toSwap2) {
@@ -162,11 +204,14 @@ public class Tabu {
     return false;
   }
 
-  private boolean checkNeighboursTimeLimits(Vehicle vehicle1, int i, Vehicle vehicle2, int j){
-    return (vehicle2.getRoute().get(j).getFinishTime() >= vehicle1.getRoute().get(i - 1).getServicedTime() +
-            pathLengths[vehicle1.getRoute().get(i - 1).getId()][vehicle2.getRoute().get(j).getId()] &&
-            vehicle1.getRoute().get(i).getFinishTime() >= vehicle2.getRoute().get(j - 1).getServicedTime() +
-                    pathLengths[vehicle2.getRoute().get(j - 1).getId()][vehicle1.getRoute().get(i).getId()]);
+  private boolean checkNeighboursTimeLimits(Vehicle vehicle1, int i, Vehicle vehicle2, int j) {
+    return (vehicle2.getRoute().get(j).getFinishTime()
+        >= vehicle1.getRoute().get(i - 1).getServicedTime() +
+        pathLengths[vehicle1.getRoute().get(i - 1).getId()][vehicle2.getRoute().get(j).getId()] &&
+        vehicle1.getRoute().get(i).getFinishTime()
+            >= vehicle2.getRoute().get(j - 1).getServicedTime() +
+            pathLengths[vehicle2.getRoute().get(j - 1).getId()][vehicle1.getRoute().get(i)
+                .getId()]);
   }
 
 }
